@@ -51,6 +51,11 @@ const Note = sequelize.define('Note', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
     field: 'is_public'
+  },
+  attachments: {
+    type: DataTypes.JSONB,
+    defaultValue: [],
+    comment: 'Array of PDF file attachments with metadata: [{filename, originalName, path, size, uploadedAt}]'
   }
 }, {
   tableName: 'notes',

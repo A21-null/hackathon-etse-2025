@@ -27,6 +27,7 @@ frontend/.cache/
 # Backend
 backend/dist/
 backend/build/
+backend/uploads/
 
 # Logs
 logs/

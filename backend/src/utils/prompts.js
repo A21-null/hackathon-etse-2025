@@ -52,36 +52,116 @@ IMPORTANTE: Responde SOLO con el JSON array, sin texto adicional antes o despué
   }),
 
   /**
-   * Generate a multiple choice quiz
+   * Generate a mixed quiz (multiple choice + true/false)
    */
   quiz: (noteContent) => ({
-    system: 'Eres un profesor experimentado en crear exámenes de opción múltiple que evalúan comprensión real, no solo memorización. Las preguntas deben ser desafiantes pero justas.',
-    user: `Genera un quiz de 5 preguntas de opción múltiple basado en estos apuntes.
+    system: 'Eres un profesor experimentado en crear exámenes que evalúan comprensión real, no solo memorización. Las preguntas deben ser desafiantes pero justas.',
+    user: `Genera un quiz de 8 preguntas variadas basado en estos apuntes.
 
 APUNTES:
 ${noteContent}
 
 Criterios para el quiz:
-- 5 preguntas que cubran diferentes aspectos del contenido
-- Cada pregunta debe tener 4 opciones (A, B, C, D)
+- 5 preguntas de opción múltiple con 4 opciones (A, B, C, D)
+- 3 preguntas de verdadero/falso
 - Solo UNA opción correcta por pregunta
 - Las opciones incorrectas deben ser plausibles (no obvias)
 - Incluye una explicación de por qué la respuesta es correcta
 - Varía el tipo de preguntas: definiciones, aplicación, análisis
+- **MUY IMPORTANTE**: La respuesta correcta debe estar en DIFERENTES posiciones. NO pongas todas las respuestas correctas en la opción A o en la misma posición. Distribuye las respuestas correctas aleatoriamente entre las opciones (0, 1, 2, 3 para múltiple choice y 0, 1 para verdadero/falso).
 
 Formato de respuesta (JSON array):
 [
   {
+    "type": "multiple",
     "question": "Texto de la pregunta",
     "options": ["Opción A", "Opción B", "Opción C", "Opción D"],
     "correctAnswer": 0,
-    "explanation": "Explicación de por qué esta respuesta es correcta y por qué las demás son incorrectas"
+    "explanation": "Explicación detallada"
+  },
+  {
+    "type": "truefalse",
+    "question": "Afirmación para evaluar",
+    "options": ["Verdadero", "Falso"],
+    "correctAnswer": 0,
+    "explanation": "Explicación de por qué es verdadero o falso"
   }
 ]
 
-El campo "correctAnswer" es el índice (0-3) de la opción correcta.
+El campo "correctAnswer" es el índice de la opción correcta (0-3 para multiple, 0-1 para truefalse).
+El campo "type" debe ser "multiple" o "truefalse".
+
+RECUERDA: Asegúrate de que las respuestas correctas estén distribuidas variadamente. Por ejemplo:
+- Pregunta 1: correctAnswer: 2
+- Pregunta 2: correctAnswer: 0
+- Pregunta 3: correctAnswer: 3
+- Pregunta 4: correctAnswer: 1
+- etc.
 
 IMPORTANTE: Responde SOLO con el JSON array, sin texto adicional antes o después.`
+  }),
+
+  /**
+   * Generate short answer questions
+   */
+  shortAnswer: (noteContent) => ({
+    system: 'Eres un profesor que crea preguntas de desarrollo para evaluar comprensión profunda. Las preguntas deben requerir respuestas elaboradas, no solo definiciones.',
+    user: `Genera 5 preguntas de respuesta corta basadas en estos apuntes.
+
+APUNTES:
+${noteContent}
+
+Criterios para las preguntas:
+- Requieren respuestas de 2-4 oraciones (50-100 palabras)
+- Evalúan comprensión profunda, no solo memorización
+- Incluyen verbos como: explica, compara, analiza, describe, justifica
+- Cada pregunta debe incluir una respuesta modelo de referencia
+- Varía la dificultad entre las preguntas
+
+Formato de respuesta (JSON array):
+[
+  {
+    "question": "Pregunta que requiere desarrollo",
+    "rubric": "Criterios de evaluación para la respuesta",
+    "modelAnswer": "Respuesta modelo de referencia (2-4 oraciones)"
+  }
+]
+
+IMPORTANTE: Responde SOLO con el JSON array, sin texto adicional antes o después.`
+  }),
+
+  /**
+   * Grade a short answer response
+   */
+  gradeShortAnswer: (question, rubric, modelAnswer, studentAnswer) => ({
+    system: 'Eres un profesor justo que evalúa respuestas de estudiantes. Proporciona feedback constructivo y específico.',
+    user: `Evalúa la siguiente respuesta de estudiante.
+
+PREGUNTA:
+${question}
+
+CRITERIOS DE EVALUACIÓN:
+${rubric}
+
+RESPUESTA MODELO:
+${modelAnswer}
+
+RESPUESTA DEL ESTUDIANTE:
+${studentAnswer}
+
+Evalúa la respuesta del estudiante y proporciona:
+1. Puntuación (0-100)
+2. Feedback específico sobre qué está bien y qué falta
+3. Sugerencias para mejorar
+
+Formato de respuesta (JSON):
+{
+  "score": 85,
+  "feedback": "Tu respuesta identifica correctamente los conceptos principales...",
+  "suggestions": "Para mejorar, podrías incluir más detalles sobre..."
+}
+
+IMPORTANTE: Responde SOLO con el JSON object, sin texto adicional antes o después.`
   })
 };
 

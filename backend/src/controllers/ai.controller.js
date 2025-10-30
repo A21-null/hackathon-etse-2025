@@ -33,9 +33,9 @@ export const generateSummary = async (req, res, next) => {
       });
     }
 
-    // Generate with Claude
+    // Generate with Claude (using Haiku for summaries - faster and cheaper)
     const prompt = PROMPTS.summarize(note.content);
-    const summary = await callClaude(prompt.user, prompt.system);
+    const summary = await callClaude(prompt.user, prompt.system, 'summary');
 
     // Save to database
     const generated = await GeneratedContent.create({
@@ -86,9 +86,9 @@ export const generateFlashcards = async (req, res, next) => {
       });
     }
 
-    // Generate with Claude
+    // Generate with Claude (using Sonnet 3.5 for flashcards - more powerful)
     const prompt = PROMPTS.flashcards(note.content);
-    const flashcardsText = await callClaude(prompt.user, prompt.system);
+    const flashcardsText = await callClaude(prompt.user, prompt.system, 'flashcards');
 
     // Parse JSON response
     const flashcards = parseClaudeJSON(flashcardsText);
@@ -147,9 +147,9 @@ export const generateQuiz = async (req, res, next) => {
       });
     }
 
-    // Generate with Claude
+    // Generate with Claude (using Sonnet 3.5 for quiz - more powerful)
     const prompt = PROMPTS.quiz(note.content);
-    const quizText = await callClaude(prompt.user, prompt.system);
+    const quizText = await callClaude(prompt.user, prompt.system, 'quiz');
 
     // Parse JSON response
     const quiz = parseClaudeJSON(quizText);
@@ -239,6 +239,88 @@ export const deleteGeneratedContent = async (req, res, next) => {
     res.json({
       success: true,
       message: 'Generated content deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Generate short answer questions
+ */
+export const generateShortAnswer = async (req, res, next) => {
+  try {
+    const { noteId } = req.body;
+
+    // Find note
+    const note = await Note.findByPk(noteId);
+    if (!note) {
+      return res.status(404).json({ error: 'Note not found' });
+    }
+
+    // Validate content length
+    validateContentLength(note.content);
+
+    // Check cache first
+    const existing = await GeneratedContent.findOne({
+      where: { noteId, type: 'shortanswer' },
+      order: [['createdAt', 'DESC']]
+    });
+
+    if (existing) {
+      console.log('✅ Using cached short answer questions');
+      return res.json({
+        success: true,
+        cached: true,
+        data: existing
+      });
+    }
+
+    // Generate with Claude
+    const prompt = PROMPTS.shortAnswer(note.content);
+    const response = await callClaude(prompt.user, prompt.system, 'shortanswer');
+    const questions = parseClaudeJSON(response);
+
+    // Save to database
+    const generated = await GeneratedContent.create({
+      noteId,
+      type: 'shortanswer',
+      content: { questions }
+    });
+
+    res.json({
+      success: true,
+      cached: false,
+      message: 'Short answer questions generated successfully',
+      data: generated
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Grade a short answer response
+ */
+export const gradeShortAnswer = async (req, res, next) => {
+  try {
+    const { question, rubric, modelAnswer, studentAnswer } = req.body;
+
+    if (!question || !rubric || !modelAnswer || !studentAnswer) {
+      return res.status(400).json({
+        error: 'Missing required fields: question, rubric, modelAnswer, studentAnswer'
+      });
+    }
+
+    // Call Claude to grade the answer
+    const prompt = PROMPTS.gradeShortAnswer(question, rubric, modelAnswer, studentAnswer);
+    const response = await callClaude(prompt.user, prompt.system, 'grading');
+    const grading = parseClaudeJSON(response);
+
+    res.json({
+      success: true,
+      message: 'Answer graded successfully',
+      data: grading
     });
   } catch (error) {
     next(error);

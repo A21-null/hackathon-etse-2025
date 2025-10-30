@@ -12,14 +12,19 @@ const anthropic = new Anthropic({
  * Call Claude API with a prompt
  * @param {string} userPrompt - The user prompt
  * @param {string} systemPrompt - The system prompt (optional)
+ * @param {string} contentType - Type of content: 'summary', 'flashcards', or 'quiz'
  * @returns {Promise<string>} - The generated text
  */
-export const callClaude = async (userPrompt, systemPrompt = '') => {
+export const callClaude = async (userPrompt, systemPrompt = '', contentType = 'summary') => {
   try {
-    console.log('🤖 Calling Claude API...');
+    // Using Claude 3 Haiku for all content types
+    // This model is fast, economical, and works reliably for all content generation
+    const model = 'claude-3-haiku-20240307';
+
+    console.log(`🤖 Calling Claude API (${model}) for ${contentType}...`);
 
     const message = await anthropic.messages.create({
-      model: CLAUDE_CONFIG.model,
+      model: model,
       max_tokens: CLAUDE_CONFIG.maxTokens,
       temperature: CLAUDE_CONFIG.temperature,
       system: systemPrompt || undefined,

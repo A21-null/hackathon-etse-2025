@@ -12,6 +12,8 @@ import './src/models/index.js';
 import authRoutes from './src/routes/auth.routes.js';
 import notesRoutes from './src/routes/notes.routes.js';
 import aiRoutes from './src/routes/ai.routes.js';
+import commentsRoutes from './src/routes/comments.routes.js';
+import uploadRoutes from './src/routes/upload.routes.js';
 
 // Import middleware
 import { errorHandler, notFound } from './src/middleware/errorHandler.js';
@@ -33,8 +35,30 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+// CORS configuration - supports multiple origins for production
+const allowedOrigins = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://127.0.0.1:5173'
+];
+
+// Add production frontend URL if defined
+if (process.env.PRODUCTION_FRONTEND_URL) {
+  allowedOrigins.push(process.env.PRODUCTION_FRONTEND_URL);
+}
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -54,6 +78,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/notes', notesRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/comments', commentsRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // 404 handler
 app.use(notFound);

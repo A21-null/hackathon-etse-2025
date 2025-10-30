@@ -4,25 +4,46 @@ export const aiAPI = {
   // Generate summary
   generateSummary: async (noteId) => {
     const response = await api.post('/ai/summarize', { noteId });
-    return response.data;
+    // Backend returns {success, cached, data: {content}}
+    return response.data.data || response.data;
   },
 
   // Generate flashcards
   generateFlashcards: async (noteId) => {
     const response = await api.post('/ai/flashcards', { noteId });
-    return response.data;
+    // Backend returns {success, cached, data: {content}}
+    return response.data.data || response.data;
   },
 
   // Generate quiz
   generateQuiz: async (noteId) => {
     const response = await api.post('/ai/quiz', { noteId });
-    return response.data;
+    // Backend returns {success, cached, data: {content}}
+    return response.data.data || response.data;
+  },
+
+  // Generate short answer questions
+  generateShortAnswer: async (noteId) => {
+    const response = await api.post('/ai/shortanswer', { noteId });
+    // Backend returns {success, cached, data: {content}}
+    return response.data.data || response.data;
+  },
+
+  // Grade short answer
+  gradeShortAnswer: async (question, rubric, modelAnswer, studentAnswer) => {
+    const response = await api.post('/ai/grade', {
+      question,
+      rubric,
+      modelAnswer,
+      studentAnswer
+    });
+    return response.data.data || response.data;
   },
 
   // Get generation history
   getHistory: async (noteId) => {
     const response = await api.get(`/ai/history/${noteId}`);
-    return response.data;
+    return response.data.data || response.data;
   },
 
   // Delete generated content

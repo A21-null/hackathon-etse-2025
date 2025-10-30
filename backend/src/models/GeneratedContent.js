@@ -21,7 +21,7 @@ const GeneratedContent = sequelize.define('GeneratedContent', {
     type: DataTypes.STRING(50),
     allowNull: false,
     validate: {
-      isIn: [['summary', 'flashcards', 'quiz']]
+      isIn: [['summary', 'flashcards', 'quiz', 'shortanswer']]
     }
   },
   content: {
